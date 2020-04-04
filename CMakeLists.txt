@@ -29,16 +29,16 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 if(ANDROID)
   add_library(Spread SHARED
     main.cpp
-    mainwindow.cpp
-    mainwindow.h
-    mainwindow.ui
+    ui/mainwindow.cpp
+    ui/mainwindow.h
+    ui/mainwindow.ui
   )
 else()
   add_executable(Spread
     main.cpp
-    mainwindow.cpp
-    mainwindow.h
-    mainwindow.ui
+    ui/mainwindow.cpp
+    ui/mainwindow.h
+    ui/mainwindow.ui
   )
 endif()
 
