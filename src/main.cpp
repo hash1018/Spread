@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <GLFW/glfw3.h>
 
+
+bool loadFrame(const char *fileName, int *width, int *height, unsigned char* *data);
+
 int main(int argv, const char* *argc){
 
 
@@ -17,6 +20,16 @@ int main(int argv, const char* *argc){
     	printf("Couldn't open window\n");
     	return 1;
     }
+
+    unsigned char *frame_data;
+    int frame_width,frame_height;
+
+    if(!loadFrame("/Users/seunghoha/Downloads/Sample Videos 4.mp4",&frame_width,&frame_height,&frame_data)){
+    	printf("Couldn't load video frame\n");
+    	return 1;
+    }
+
+    /*
 
     unsigned char *data = new unsigned char[100 *100 * 3];
     for(int y=0; y <100; y++){
@@ -39,6 +52,8 @@ int main(int argv, const char* *argc){
     	}
     }
 
+    */
+
     glfwMakeContextCurrent(window);
 
 
@@ -52,7 +67,7 @@ int main(int argv, const char* *argc){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,100,100,0,GL_RGB,GL_UNSIGNED_BYTE,data);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,frame_width,frame_height,0,GL_RGB,GL_UNSIGNED_BYTE,frame_data);
 
     
     while(!glfwWindowShouldClose(window)){
@@ -71,10 +86,10 @@ int main(int argv, const char* *argc){
     	glEnable(GL_TEXTURE_2D);
     	glBindTexture(GL_TEXTURE_2D,tex_handle);
     	glBegin(GL_QUADS);
-    	    glTexCoord2d(0,0); glVertex2i(0,0);
-    	    glTexCoord2d(1,0); glVertex2i(100,0);
-    	    glTexCoord2d(1,1); glVertex2i(100,100);
-    	    glTexCoord2d(0,1); glVertex2i(0,100);
+    	    glTexCoord2d(0,0); glVertex2i(200,200);
+    	    glTexCoord2d(1,0); glVertex2i(200 + frame_width * 2 , 200);
+    	    glTexCoord2d(1,1); glVertex2i(200 + frame_width * 2 , 200 + frame_height *2 );
+    	    glTexCoord2d(0,1); glVertex2i(200,200 + frame_height * 2);
     	glEnd();
     	glDisable(GL_TEXTURE_2D);    
 

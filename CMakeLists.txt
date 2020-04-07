@@ -3,7 +3,7 @@ project(Spread C CXX)
 set(CMAKE_CXX_STANDARD 14)
 
 add_subdirectory(lib/glfw)
-add_subdirectory(lib/FFmpeg)
+add_subdirectory(lib/ffmpeg)
 
 add_definitions(-DGL_SILENCE_DEPRECATION)
 
@@ -25,7 +25,13 @@ else()
 
 endif()
 
+list(APPEND SOURCES
+    src/main.cpp
+    src/loadFrame.cpp
+)
 
-add_executable(Spread src/main.cpp)
 
-target_link_libraries(Spread FFmpeg glfw ${EXTRA_LIBS})
+
+add_executable(Spread ${SOURCES})
+
+target_link_libraries(Spread ffmpeg glfw ${EXTRA_LIBS})
