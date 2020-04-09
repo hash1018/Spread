@@ -1,11 +1,7 @@
 
-#include <stdio.h>
 #include <GLFW/glfw3.h>
-#include <qdebug.h>
 #include "ui/mainwindow.h"
 #include <qapplication.h>
-
-bool loadFrame(const char *fileName, int *width, int *height, unsigned char* *data);
 
 int main(int argc, char *argv[]){
 
