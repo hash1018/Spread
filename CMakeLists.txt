@@ -2,6 +2,15 @@ cmake_minimum_required(VERSION 3.14)
 project(Spread C CXX)
 set(CMAKE_CXX_STANDARD 14)
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
+
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
+
 add_subdirectory(lib/glfw)
 add_subdirectory(lib/ffmpeg)
 
@@ -28,10 +37,14 @@ endif()
 list(APPEND SOURCES
     src/main.cpp
     src/loadFrame.cpp
+    src/ui/mainwindow.cpp
+    src/ui/mainwindow.h
+    src/ui/openglwidget.cpp
+    src/ui/openglwidget.h
 )
 
 
 
 add_executable(Spread ${SOURCES})
 
-target_link_libraries(Spread ffmpeg glfw ${EXTRA_LIBS})
+target_link_libraries(Spread Qt5::Widgets ffmpeg glfw ${EXTRA_LIBS})

@@ -1,13 +1,21 @@
 
 #include <stdio.h>
 #include <GLFW/glfw3.h>
-
+#include <qdebug.h>
+#include "ui/mainwindow.h"
+#include <qapplication.h>
 
 bool loadFrame(const char *fileName, int *width, int *height, unsigned char* *data);
 
-int main(int argv, const char* *argc){
+int main(int argc, char *argv[]){
+
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.show();
+    return a.exec();
 
 
+    /*
     GLFWwindow *window;
 
     if(!glfwInit()){
@@ -29,8 +37,8 @@ int main(int argv, const char* *argc){
     	return 1;
     }
 
-    /*
 
+   ///
     unsigned char *data = new unsigned char[100 *100 * 3];
     for(int y=0; y <100; y++){
 
@@ -51,8 +59,8 @@ int main(int argv, const char* *argc){
     		data[ y * 100 * 3 + x * 3 + 2 ]=0xff;
     	}
     }
+///
 
-    */
 
     glfwMakeContextCurrent(window);
 
@@ -106,5 +114,7 @@ int main(int argv, const char* *argc){
 
 
     printf("Hello World\n");
-    return 0;
+
+    */
+    //return 0;
 }
