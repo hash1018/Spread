@@ -36,13 +36,14 @@ endif()
 
 list(APPEND SOURCES
     src/main.cpp
-    #src/loadFrame.cpp
     src/ui/mainwindow.cpp
     src/ui/mainwindow.h
     src/ui/openglwidget.cpp
     src/ui/openglwidget.h
     src/spread-ffmpeg/loadframe.h
     src/spread-ffmpeg/loadframe.cpp
+    src/spread-ffmpeg/videoreader.cpp
+    src/spread-ffmpeg/videoreader.h
 )
 
 

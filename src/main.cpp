@@ -1,5 +1,5 @@
 
-#include <GLFW/glfw3.h>
+//#include <GLFW/glfw3.h>
 #include "ui/mainwindow.h"
 #include <qapplication.h>
 
