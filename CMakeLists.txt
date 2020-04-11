@@ -46,6 +46,8 @@ list(APPEND SOURCES
     src/spread-ffmpeg/videoreader.h
     src/spread-ffmpeg/framedata.cpp
     src/spread-ffmpeg/framedata.h
+    src/spread-ffmpeg/remuxer.cpp
+    src/spread-ffmpeg/remuxer.h
 )
 
 

@@ -34,10 +34,7 @@ OpenGLWidget::OpenGLWidget(QWidget *parent)
                 " height  " << this->videoReader->getHeight() <<
                " fps " <<this->videoReader->getFps();
 
-    this->videoReader->readFrame(*this->frameData);
-
-
-    this->timer->setInterval(33);
+    this->timer->setInterval(1000/ this->videoReader->getFps());
     this->timer->start();
 }
 
@@ -89,7 +86,7 @@ void OpenGLWidget::paintGL() {
     glMatrixMode(GL_MODELVIEW);
 
     //Read a new frame and load it into texture
-    if(videoReader->readFrame(/*this->frame_data*/ *this->frameData)==false){
+    if(videoReader->readFrame(*this->frameData)==false){
         qDebug() <<"failed to read Frame ";
         return;
     }
