@@ -1,9 +1,11 @@
+
 #include "videoreader.h"
+#include "framedata.h"
 
 VideoReader::VideoReader()
     :avFormatContext(NULL), avCodecContext(NULL), avFrame(NULL),
       avPacket(NULL), swsContext(NULL), width(0), height(0),
-      videoStreamIndex(-1), closed(false) {
+      videoStreamIndex(-1),fps(0), closed(false),opened(false) {
 
 }
 
@@ -15,6 +17,18 @@ VideoReader::~VideoReader(){
 }
 
 bool VideoReader::open(const char *fileName){
+
+    if(this->opened==true){
+
+        printf("already opened\n");
+        return false;
+    }
+
+    if(this->closed==true){
+
+        printf("already closed\n");
+        return false;
+    }
 
     this->avFormatContext=avformat_alloc_context();
     if(!this->avFormatContext){
@@ -87,14 +101,30 @@ bool VideoReader::open(const char *fileName){
         return false;
     }
 
+    this->fps=this->avFormatContext->streams[this->videoStreamIndex]->avg_frame_rate.num;
+    this->opened=true;
     return true;
 }
 
-bool VideoReader::readFrame(uint8_t *buffer){
+
+bool VideoReader::readFrame(FrameData &frameData){
+
+    if(this->opened==false){
+
+        printf("videoReader is not open\n");
+        return false;
+    }
+
+    if(this->closed==true){
+
+        printf("videoReader is already closed\n");
+        return false;
+    }
 
     while ( av_read_frame(this->avFormatContext,this->avPacket) >=0){
 
         if(this->avPacket->stream_index != this->videoStreamIndex){
+            av_packet_unref(this->avPacket);
             continue;
         }
 
@@ -106,6 +136,7 @@ bool VideoReader::readFrame(uint8_t *buffer){
         }
         response= avcodec_receive_frame(this->avCodecContext,this->avFrame);
         if(response == AVERROR(EAGAIN) || response == AVERROR_EOF){
+            av_packet_unref(this->avPacket);
             continue;
         }
         else if(response < 0){
@@ -118,11 +149,19 @@ bool VideoReader::readFrame(uint8_t *buffer){
         break;
     }
 
+    frameData.pts=this->avFrame->pts;
+    frameData.ptsRealTime=this->avFrame->pts *
+            (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.num /
+            (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den;
+    frameData.frameNumber=double(this->fps*this->avFrame->pts) /
+            (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den;
+
+
 
     if(this->swsContext==NULL){
 
         this->swsContext=sws_getContext(this->avFrame->width, this->avFrame->height, this->avCodecContext->pix_fmt,
-                                       this->avFrame->width,this->avFrame->height, AV_PIX_FMT_RGB0,
+                                       frameData.width,frameData.height, AV_PIX_FMT_RGB0,
                                        SWS_BILINEAR, NULL,NULL,NULL);
     }
 
@@ -132,13 +171,14 @@ bool VideoReader::readFrame(uint8_t *buffer){
         return false;
     }
 
-    uint8_t *dest[4] = {buffer, NULL, NULL, NULL};
-    int dest_linesize[4] = { this->width *4, 0, 0, 0};
+    uint8_t *dest[4] = {frameData.buffer, NULL, NULL, NULL};
+    int dest_linesize[4] = { frameData.width *4, 0, 0, 0};
 
     sws_scale(this->swsContext,this->avFrame->data,this->avFrame->linesize, 0, this->avFrame->height, dest, dest_linesize);
 
     return true;
 }
+
 
 bool VideoReader::close(){
 

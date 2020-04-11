@@ -44,6 +44,8 @@ list(APPEND SOURCES
     src/spread-ffmpeg/loadframe.cpp
     src/spread-ffmpeg/videoreader.cpp
     src/spread-ffmpeg/videoreader.h
+    src/spread-ffmpeg/framedata.cpp
+    src/spread-ffmpeg/framedata.h
 )
 
 

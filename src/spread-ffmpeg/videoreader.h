@@ -10,6 +10,9 @@ extern "C"{
 #include <inttypes.h>
 }
 
+
+class FrameData;
+
 class VideoReader {
 
 private:
@@ -24,18 +27,23 @@ private:
 
     int videoStreamIndex;
 
+    int fps;
+
 private:
     bool closed;
+    bool opened;
 
 public:
     VideoReader();
     ~VideoReader();
 
     bool open(const char *fileName);
-    bool readFrame(uint8_t *buffer);
+    //bool readFrame(uint8_t *buffer);
+    bool readFrame(FrameData &frameData);
     bool close();
 
 public:
+    inline int getFps() const {return this->fps;}
     inline int getWidth() const {return this->width; }
     inline int getHeight() const {return this->height; }
 };

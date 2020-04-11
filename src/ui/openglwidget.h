@@ -4,14 +4,13 @@
 #include <qopenglwidget.h>
 
 class VideoReader;
+class FrameData;
 class QTimer;
 
 class OpenGLWidget : public QOpenGLWidget {
 
 private:
-    uint8_t *frame_data;
-    int frame_width;
-    int frame_height;
+    FrameData *frameData;
     bool validFrame;
 
 private:
@@ -22,6 +21,7 @@ private:
 
 private:
     QTimer *timer;
+    bool alreadyDrawn;
 
 public:
     OpenGLWidget(QWidget *parent=nullptr);

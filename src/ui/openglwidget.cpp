@@ -1,27 +1,17 @@
 
 #include "openglwidget.h"
 #include <qopenglfunctions.h>
-#include "src/spread-ffmpeg/loadframe.h"
 #include <qdebug.h>
 #include "src/spread-ffmpeg/videoreader.h"
 #include <qtimer.h>
+#include "src/spread-ffmpeg/framedata.h"
 
 OpenGLWidget::OpenGLWidget(QWidget *parent)
-    :QOpenGLWidget(parent),validFrame(false) {
-/*
-    bool result=loadFrame("/Users/seunghoha/Downloads/Sample Videos 4.mp4",&this->frame_width,&this->frame_height,&this->frame_data);
+    :QOpenGLWidget(parent),validFrame(false),alreadyDrawn(false) {
 
-    if(result==false){
-        qDebug() << "load video frame Failed\n";
-        this->validFrame=false;
-    }
-    else{
-
-        this->validFrame=true;
-    }
-    */
 
     this->videoReader=new VideoReader;
+    this->frameData=new FrameData(600,400);
 
     if(videoReader->open("/Users/seunghoha/Downloads/Sample Videos 4.mp4")==false){
 
@@ -30,32 +20,37 @@ OpenGLWidget::OpenGLWidget(QWidget *parent)
         return;
     }
 
-    this->frame_width=videoReader->getWidth();
-    this->frame_height=videoReader->getHeight();
-    this->frame_data= new uint8_t[this->frame_width * this->frame_height * 4 ];
-
-
     this->validFrame=true;
 
     this->timer=new QTimer(this);
 
     connect(this->timer,&QTimer::timeout,this,[this]{
 
+        this->alreadyDrawn=false;
         this->update();
     });
 
-    this->timer->setInterval(30);
+    qDebug() <<" videoReader width " << this->videoReader->getWidth() <<
+                " height  " << this->videoReader->getHeight() <<
+               " fps " <<this->videoReader->getFps();
+
+    this->videoReader->readFrame(*this->frameData);
+
+
+    this->timer->setInterval(33);
     this->timer->start();
 }
 
 
 OpenGLWidget::~OpenGLWidget(){
 
-
     this->videoReader->close();
 
     if(this->videoReader!=nullptr)
         delete this->videoReader;
+
+    if(this->frameData!=nullptr)
+        delete this->frameData;
 }
 
 
@@ -82,6 +77,9 @@ void OpenGLWidget::paintGL() {
     if(this->validFrame==false)
         return;
 
+    if(this->alreadyDrawn==true)
+        return;
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //Set up orphographic projection
@@ -91,13 +89,13 @@ void OpenGLWidget::paintGL() {
     glMatrixMode(GL_MODELVIEW);
 
     //Read a new frame and load it into texture
-    if(videoReader->readFrame(this->frame_data)==false){
+    if(videoReader->readFrame(/*this->frame_data*/ *this->frameData)==false){
         qDebug() <<"failed to read Frame ";
         return;
     }
 
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,this->frame_width,this->frame_height,
-                 0,GL_RGBA,GL_UNSIGNED_BYTE,this->frame_data);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,this->frameData->getWidth(),this->frameData->getHeight(),
+                     0,GL_RGBA,GL_UNSIGNED_BYTE,this->frameData->getBuffer());
 
     //Render
 
@@ -105,11 +103,18 @@ void OpenGLWidget::paintGL() {
     glBindTexture(GL_TEXTURE_2D,this->tex_handle);
     glBegin(GL_QUADS);
         glTexCoord2d(0,0); glVertex2i(0,0);
-        glTexCoord2d(1,0); glVertex2i(0 + this->frame_width * 2 , 0);
-        glTexCoord2d(1,1); glVertex2i(0 + this->frame_width * 2 , 0 + this->frame_height *2 );
-        glTexCoord2d(0,1); glVertex2i(0,0 + this->frame_height * 2);
+        glTexCoord2d(1,0); glVertex2i(0 + this->frameData->getWidth() * 2 , 0);
+        glTexCoord2d(1,1); glVertex2i(0 + this->frameData->getWidth() * 2 , 0 + this->frameData->getHeight() *2 );
+        glTexCoord2d(0,1); glVertex2i(0,0 + this->frameData->getHeight() * 2);
     glEnd();
     glDisable(GL_TEXTURE_2D);
+
+
+    qDebug() << "pts  " << this->frameData->getPts();
+    qDebug() <<" ptrRealTime  " << this->frameData->getPtsRealTime();
+    qDebug() <<"frameNumber" << this->frameData->getFrameNumber();
+
+    this->alreadyDrawn=true;
 
 }
 
