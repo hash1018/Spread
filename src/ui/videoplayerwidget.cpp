@@ -24,8 +24,9 @@ VideoPlayerWidget::VideoPlayerWidget(const QString &filePath, QWidget *parent)
                " totalFrameCount " << this->videoReader->getTotalFrameCount();
 
 
-    this->frameData=new FrameData(600,400);
-    this->videoReader->seekFrame(450, *this->frameData);
+    this->frameData=new FrameData(1200,800);
+
+    //this->videoReader->seekFrame(450, *this->frameData);
 
     this->timer=new QTimer(this);
 
