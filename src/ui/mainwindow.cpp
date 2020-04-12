@@ -1,27 +1,41 @@
 
 #include "mainwindow.h"
-#include "openglwidget.h"
-#include <QResizeEvent>
+#include "videoplayerwidget.h"
+#include "playvideodialog.h"
 
 MainWindow::MainWindow(QWidget *parent)
-    :QMainWindow(parent) ,openGLWidget(new OpenGLWidget(this)) {
+    :QMainWindow(parent), playVideoDialog(nullptr) {
 
-    this->setWindowTitle("MainWindow");
-    this->setMinimumSize(800,600);
+    ui.setupUi(this);
 
-
+    connect(ui.playButton,&QPushButton::clicked,this,&MainWindow::playButtonClicked);
 }
 
 
 MainWindow::~MainWindow(){
 
-    if(this->openGLWidget!=nullptr)
-        delete this->openGLWidget;
+    if(this->playVideoDialog!=nullptr){
+
+        this->playVideoDialog->close();
+        delete this->playVideoDialog;
+    }
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event){
 
     QMainWindow::resizeEvent(event);
 
-    this->openGLWidget->setGeometry(0,0,event->size().width(),event->size().height());
+}
+
+void MainWindow::playButtonClicked(){
+
+
+    if(this->playVideoDialog!=nullptr){
+
+        this->playVideoDialog->close();
+        delete this->playVideoDialog;
+    }
+
+    this->playVideoDialog = new PlayVideoDialog;
+    this->playVideoDialog->show();
 }

@@ -5,7 +5,7 @@
 VideoReader::VideoReader()
     :avFormatContext(NULL), avCodecContext(NULL), avFrame(NULL),
       avPacket(NULL), swsContext(NULL), width(0), height(0),
-      videoStreamIndex(-1),fps(0), closed(false),opened(false) {
+      videoStreamIndex(-1),fps(0), invalidFrameCount(0), closed(false),opened(false) {
 
 }
 
@@ -102,10 +102,10 @@ bool VideoReader::open(const char *fileName){
     }
 
     this->fps=this->avFormatContext->streams[this->videoStreamIndex]->avg_frame_rate.num;
+    this->totalFrameCount=this->avFormatContext->streams[this->videoStreamIndex]->nb_frames;
     this->opened=true;
     return true;
 }
-
 
 bool VideoReader::readFrame(FrameData &frameData){
 
@@ -123,6 +123,38 @@ bool VideoReader::readFrame(FrameData &frameData){
 
     while ( av_read_frame(this->avFormatContext,this->avPacket) >=0){
 
+        if(this->avPacket->stream_index == this->videoStreamIndex){
+
+            int response=avcodec_send_packet(this->avCodecContext,this->avPacket);
+            if(response  < 0){
+
+                printf("Failed to decode packet: %s\n",av_err2str(response));
+                return false;
+            }
+            response= avcodec_receive_frame(this->avCodecContext,this->avFrame);
+            if(response == AVERROR(EAGAIN)) {
+                av_packet_unref(this->avPacket);
+                this->invalidFrameCount++;
+                continue;
+            }
+            else if( response == AVERROR_EOF){
+
+                av_packet_unref(this->avPacket);
+                return false;
+            }
+            else if(response < 0){
+
+                printf("Failed to decode packet: %s\n",av_err2str(response));
+                return false;
+            }
+
+            av_packet_unref(this->avPacket);
+            break;
+        }
+
+        av_packet_unref(this->avPacket);
+
+        /*
         if(this->avPacket->stream_index != this->videoStreamIndex){
             av_packet_unref(this->avPacket);
             continue;
@@ -135,9 +167,14 @@ bool VideoReader::readFrame(FrameData &frameData){
             return false;
         }
         response= avcodec_receive_frame(this->avCodecContext,this->avFrame);
-        if(response == AVERROR(EAGAIN) || response == AVERROR_EOF){
+        if(response == AVERROR(EAGAIN)) {
             av_packet_unref(this->avPacket);
             continue;
+        }
+        else if( response == AVERROR_EOF){
+
+            av_packet_unref(this->avPacket);
+            return false;
         }
         else if(response < 0){
 
@@ -147,14 +184,21 @@ bool VideoReader::readFrame(FrameData &frameData){
 
         av_packet_unref(this->avPacket);
         break;
+        */
+
     }
 
     frameData.pts=this->avFrame->pts;
     frameData.ptsRealTime=this->avFrame->pts *
             (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.num /
             (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den;
-    frameData.frameNumber=double(this->fps*this->avFrame->pts) /
-            (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den;
+    frameData.frameNumber=(double(this->fps*this->avFrame->pts) /
+            (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den) + 1;
+
+    if(frameData.frameNumber == this->totalFrameCount - this->invalidFrameCount){
+
+        frameData.finalFrame=true;
+    }
 
 
 
@@ -162,7 +206,7 @@ bool VideoReader::readFrame(FrameData &frameData){
 
         this->swsContext=sws_getContext(this->avFrame->width, this->avFrame->height, this->avCodecContext->pix_fmt,
                                        frameData.width,frameData.height, AV_PIX_FMT_RGB0,
-                                       SWS_BILINEAR, NULL,NULL,NULL);
+                                       SWS_FAST_BILINEAR, NULL,NULL,NULL);
     }
 
     if(!this->swsContext){

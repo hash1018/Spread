@@ -38,8 +38,12 @@ list(APPEND SOURCES
     src/main.cpp
     src/ui/mainwindow.cpp
     src/ui/mainwindow.h
-    src/ui/openglwidget.cpp
-    src/ui/openglwidget.h
+    src/ui/mainwindow.ui
+    src/ui/videoplayerwidget.cpp
+    src/ui/videoplayerwidget.h
+    src/ui/playvideodialog.cpp
+    src/ui/playvideodialog.h
+    src/ui/playvideodialog.ui
     src/spread-ffmpeg/loadframe.h
     src/spread-ffmpeg/loadframe.cpp
     src/spread-ffmpeg/videoreader.cpp

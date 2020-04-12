@@ -18,6 +18,7 @@ private:
     int frameNumber;
 
     double ptsRealTime;
+    bool finalFrame;
 
 public:
     FrameData(int width,int height);
@@ -30,6 +31,7 @@ public:
     inline const uint8_t* getBuffer() const {return this->buffer;}
     inline int getFrameNumber() const {return this->frameNumber;}
     inline double getPtsRealTime() const {return this->ptsRealTime;}
+    inline bool isFinalFrame() const {return this->finalFrame;}
 };
 
 #endif // FRAMEDATA_H

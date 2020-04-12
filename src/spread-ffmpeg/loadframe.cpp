@@ -124,7 +124,7 @@ bool loadFrame(const char *fileName, int *width_out, int *height_out, unsigned c
 
     SwsContext *sws_ctx=sws_getContext(av_frame->width, av_frame->height, av_codec_ctx->pix_fmt,
                                        av_frame->width,av_frame->height, AV_PIX_FMT_RGB0,
-                                       SWS_BILINEAR, NULL,NULL,NULL);
+                                       SWS_FAST_BILINEAR, NULL,NULL,NULL);
 
     if(!sws_ctx){
 
