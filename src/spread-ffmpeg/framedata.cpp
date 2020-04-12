@@ -1,7 +1,7 @@
 #include "framedata.h"
 
 FrameData::FrameData(int width,int height)
-    :width(width),height(height),buffer(nullptr),pts(0),frameNumber(0),ptsRealTime(0),finalFrame(false) {
+    :width(width),height(height),buffer(nullptr),pts(0),frameIndex(0),ptsRealTime(0),finalFrame(false) {
 
     this->buffer=new uint8_t [this->width * this->height * 4];
 }

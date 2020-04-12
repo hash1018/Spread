@@ -15,7 +15,7 @@ private:
 
     int64_t pts;
 
-    int frameNumber;
+    int frameIndex;
 
     double ptsRealTime;
     bool finalFrame;
@@ -29,7 +29,7 @@ public:
     inline int getHeight() const {return this->height;}
     inline int64_t getPts() const {return this->pts;}
     inline const uint8_t* getBuffer() const {return this->buffer;}
-    inline int getFrameNumber() const {return this->frameNumber;}
+    inline int getFrameIndex() const {return this->frameIndex;}
     inline double getPtsRealTime() const {return this->ptsRealTime;}
     inline bool isFinalFrame() const {return this->finalFrame;}
 };

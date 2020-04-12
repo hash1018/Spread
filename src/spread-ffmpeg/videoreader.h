@@ -50,12 +50,14 @@ public:
     //bool readFrame(uint8_t *buffer);
     bool readFrame(FrameData &frameData);
     bool close();
+    bool seekFrame(int64_t frameIndex, FrameData &frameData);
 
 public:
     inline int getFps() const {return this->fps;}
     inline int getWidth() const {return this->width; }
     inline int getHeight() const {return this->height; }
     inline int64_t getTotalFrameCount() const {return this->totalFrameCount;}
+
 };
 
 #endif // VIDEOREADER_H

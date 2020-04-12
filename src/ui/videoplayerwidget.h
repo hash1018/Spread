@@ -12,7 +12,6 @@ class VideoPlayerWidget : public QOpenGLWidget {
 
 private:
     FrameData *frameData;
-    bool validFrame;
 
 private:
     QString filePath;
@@ -23,7 +22,6 @@ private:
 
 private:
     QTimer *timer;
-    bool alreadyDrawn;
 
 public:
     VideoPlayerWidget(const QString &filePath, QWidget *parent=nullptr);
@@ -32,13 +30,12 @@ public:
 protected:
     virtual void initializeGL() override;
     virtual void paintGL() override;
-    virtual void resizeGL(int w, int h) override;
-    virtual void moveEvent(QMoveEvent *event) override;
-    virtual void resizeEvent(QResizeEvent *event) override;
-
 
 public:
     inline const QString& getFilePath() const {return this->filePath;}
+
+private slots:
+    void framePerSecTimePassed();
 
 };
 

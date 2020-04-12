@@ -153,49 +153,16 @@ bool VideoReader::readFrame(FrameData &frameData){
         }
 
         av_packet_unref(this->avPacket);
-
-        /*
-        if(this->avPacket->stream_index != this->videoStreamIndex){
-            av_packet_unref(this->avPacket);
-            continue;
-        }
-
-        int response=avcodec_send_packet(this->avCodecContext,this->avPacket);
-        if(response  < 0){
-
-            printf("Failed to decode packet: %s\n",av_err2str(response));
-            return false;
-        }
-        response= avcodec_receive_frame(this->avCodecContext,this->avFrame);
-        if(response == AVERROR(EAGAIN)) {
-            av_packet_unref(this->avPacket);
-            continue;
-        }
-        else if( response == AVERROR_EOF){
-
-            av_packet_unref(this->avPacket);
-            return false;
-        }
-        else if(response < 0){
-
-            printf("Failed to decode packet: %s\n",av_err2str(response));
-            return false;
-        }
-
-        av_packet_unref(this->avPacket);
-        break;
-        */
-
     }
 
     frameData.pts=this->avFrame->pts;
     frameData.ptsRealTime=this->avFrame->pts *
             (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.num /
             (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den;
-    frameData.frameNumber=(double(this->fps*this->avFrame->pts) /
-            (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den) + 1;
+    frameData.frameIndex=(double(this->fps*this->avFrame->pts) /
+            (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den);
 
-    if(frameData.frameNumber == this->totalFrameCount - this->invalidFrameCount){
+    if(frameData.frameIndex == this->totalFrameCount - this->invalidFrameCount -1 /* -1 is because frameNumber starts from zero.*/){
 
         frameData.finalFrame=true;
     }
@@ -226,7 +193,6 @@ bool VideoReader::readFrame(FrameData &frameData){
 
 bool VideoReader::close(){
 
-
     sws_freeContext(this->swsContext);
     avformat_close_input(&this->avFormatContext);
     av_frame_free(&this->avFrame);
@@ -234,6 +200,43 @@ bool VideoReader::close(){
     avformat_free_context(this->avFormatContext);
     avcodec_free_context(&this->avCodecContext);
     this->closed=true;
+
+    return true;
+}
+
+bool VideoReader::seekFrame(int64_t frameIndex, FrameData &frameData) {
+
+    if(this->opened == false){
+
+        printf("VideoReader is not opened yet.\n");
+        return false;
+    }
+
+    if(this->closed == true){
+
+        printf("VideoReader is already closed. \n");
+        return false;
+    }
+
+    /*int64_t seekTarget=frameNumber * this->avFormatContext->streams[this->videoStreamIndex]->time_base.num * AV_TIME_BASE /
+            this->avFormatContext->streams[this->videoStreamIndex]->time_base.den;
+    */
+
+
+    if(av_seek_frame(this->avFormatContext, this->videoStreamIndex, frameIndex, AVSEEK_FLAG_BACKWARD) < 0){
+
+        printf("Couldn't seek frame.\n");
+        return false;
+    }
+
+    avcodec_flush_buffers(this->avCodecContext);
+
+    do{
+
+        this->readFrame(frameData);
+
+    }while(frameData.frameIndex < frameIndex );
+
 
     return true;
 }

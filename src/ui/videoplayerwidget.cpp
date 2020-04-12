@@ -7,34 +7,29 @@
 #include "src/spread-ffmpeg/framedata.h"
 
 VideoPlayerWidget::VideoPlayerWidget(const QString &filePath, QWidget *parent)
-    :QOpenGLWidget(parent), validFrame(false), filePath(filePath), alreadyDrawn(false) {
+    :QOpenGLWidget(parent), frameData(nullptr), filePath(filePath) {
 
 
     this->videoReader=new VideoReader;
-    this->frameData=new FrameData(600,400);
 
-    if(videoReader->open(filePath.toUtf8())==false){
+    if(videoReader->open(filePath.toUtf8()) == false){
 
         qDebug() <<"failed to open video";
-        this->validFrame=false;
         return;
     }
-
-    this->validFrame=true;
-
-    this->timer=new QTimer(this);
-
-    connect(this->timer,&QTimer::timeout,this,[this]{
-
-        this->alreadyDrawn=false;
-        this->update();
-    });
 
     qDebug() <<" videoReader width " << this->videoReader->getWidth() <<
                 " height  " << this->videoReader->getHeight() <<
                " fps " <<this->videoReader->getFps() <<
                " totalFrameCount " << this->videoReader->getTotalFrameCount();
 
+
+    this->frameData=new FrameData(600,400);
+    this->videoReader->seekFrame(450, *this->frameData);
+
+    this->timer=new QTimer(this);
+
+    connect(this->timer,&QTimer::timeout,this,&VideoPlayerWidget::framePerSecTimePassed);
 
     this->timer->setInterval(1000/ this->videoReader->getFps());
     this->timer->start();
@@ -73,10 +68,7 @@ void VideoPlayerWidget::initializeGL() {
 
 void VideoPlayerWidget::paintGL() {
 
-    if(this->validFrame==false)
-        return;
-
-    if(this->alreadyDrawn==true)
+    if(this->frameData==nullptr)
         return;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -88,20 +80,11 @@ void VideoPlayerWidget::paintGL() {
     glMatrixMode(GL_MODELVIEW);
 
 
-    if(this->frameData->isFinalFrame()==false){
-        //Read a new frame and load it into texture
-        if(videoReader->readFrame(*this->frameData)==false){
-            qDebug() <<"failed to read Frame ";
-            this->timer->stop();
-            return;
-        }
-    }
-
+    //load frame into texture.
     glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,this->frameData->getWidth(),this->frameData->getHeight(),
                      0,GL_RGBA,GL_UNSIGNED_BYTE,this->frameData->getBuffer());
 
     //Render
-
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D,this->tex_handle);
     glBegin(GL_QUADS);
@@ -111,36 +94,25 @@ void VideoPlayerWidget::paintGL() {
         glTexCoord2d(0,1); glVertex2i(0,0 + this->frameData->getHeight() * 2);
     glEnd();
     glDisable(GL_TEXTURE_2D);
+}
 
+void VideoPlayerWidget::framePerSecTimePassed() {
+
+    if(videoReader->readFrame(*this->frameData)==false){
+        qDebug() <<"failed to read Frame ";
+        this->timer->stop();
+        return;
+    }
 
     qDebug() << "pts  " << this->frameData->getPts();
     qDebug() <<" ptrRealTime  " << this->frameData->getPtsRealTime();
-    qDebug() <<"frameNumber" << this->frameData->getFrameNumber();
+    qDebug() <<"frameIndex" << this->frameData->getFrameIndex();
+
+    this->update();
 
     if(this->frameData->isFinalFrame()==true){
 
         this->timer->stop();
     }
-
-    this->alreadyDrawn=true;
-
-}
-
-void VideoPlayerWidget::resizeGL(int w, int h) {
-
-    this->alreadyDrawn=false;
-    QOpenGLWidget::resizeGL(w,h);
-}
-
-void VideoPlayerWidget::moveEvent(QMoveEvent *event) {
-
-    this->alreadyDrawn=false;
-    QOpenGLWidget::moveEvent(event);
-}
-
-void VideoPlayerWidget::resizeEvent(QResizeEvent *event) {
-
-    this->alreadyDrawn=false;
-    QOpenGLWidget::resizeEvent(event);
 
 }
