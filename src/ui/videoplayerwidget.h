@@ -8,6 +8,9 @@ class VideoReader;
 class FrameData;
 class QTimer;
 
+
+class HwAccelsDecoder;
+
 class VideoPlayerWidget : public QOpenGLWidget {
 
 private:
@@ -16,12 +19,14 @@ private:
 private:
     QString filePath;
     VideoReader *videoReader;
+    HwAccelsDecoder *hwAccelsDecoder;
 
 private:
     GLuint tex_handle;
 
 private:
     QTimer *timer;
+    int time;
 
 public:
     VideoPlayerWidget(const QString &filePath, QWidget *parent=nullptr);
@@ -36,6 +41,11 @@ public:
 
 private slots:
     void framePerSecTimePassed();
+    void framePerSecTimePassedHw();
+
+private:
+    void initVideoReader();
+    void initHwDecoder();
 
 };
 

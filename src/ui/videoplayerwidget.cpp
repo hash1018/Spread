@@ -5,10 +5,21 @@
 #include "src/spread-ffmpeg/videoreader.h"
 #include <qtimer.h>
 #include "src/spread-ffmpeg/framedata.h"
+#include "src/spread-ffmpeg/hwaccelsdecoder.h"
 
 VideoPlayerWidget::VideoPlayerWidget(const QString &filePath, QWidget *parent)
-    :QOpenGLWidget(parent), frameData(nullptr), filePath(filePath) {
+    :QOpenGLWidget(parent), frameData(nullptr), filePath(filePath),
+      videoReader(nullptr),hwAccelsDecoder(nullptr) {
 
+
+    this->time=0;
+
+    this->initVideoReader();
+
+    //this->initHwDecoder();
+}
+
+void VideoPlayerWidget::initVideoReader(){
 
     this->videoReader=new VideoReader;
 
@@ -24,9 +35,12 @@ VideoPlayerWidget::VideoPlayerWidget(const QString &filePath, QWidget *parent)
                " totalFrameCount " << this->videoReader->getTotalFrameCount();
 
 
-    this->frameData=new FrameData(1200,800);
+    this->frameData=new FrameData(this->videoReader->getWidth(),
+                                  this->videoReader->getHeight());
 
     //this->videoReader->seekFrame(450, *this->frameData);
+
+
 
     this->timer=new QTimer(this);
 
@@ -36,16 +50,56 @@ VideoPlayerWidget::VideoPlayerWidget(const QString &filePath, QWidget *parent)
     this->timer->start();
 }
 
+void VideoPlayerWidget::initHwDecoder(){
+
+
+    this->hwAccelsDecoder=new HwAccelsDecoder;
+
+    if(hwAccelsDecoder->open(filePath.toUtf8()) == false){
+
+        qDebug() <<"failed to open video";
+        return;
+    }
+
+    qDebug() <<" hwAccelsDecoder width " << this->hwAccelsDecoder->getWidth() <<
+                " height  " << this->hwAccelsDecoder->getHeight() <<
+               " fps " <<this->hwAccelsDecoder->getFps() <<
+               " totalFrameCount " << this->hwAccelsDecoder->getTotalFrameCount();
+
+
+    this->frameData=new FrameData(this->hwAccelsDecoder->getWidth(),
+                                  this->hwAccelsDecoder->getHeight());
+
+
+
+    this->timer=new QTimer(this);
+
+    connect(this->timer,&QTimer::timeout,this,&VideoPlayerWidget::framePerSecTimePassedHw);
+
+    this->timer->setInterval(1000/ this->hwAccelsDecoder->getFps());
+    this->timer->start();
+
+
+}
+
 
 VideoPlayerWidget::~VideoPlayerWidget(){
 
-    this->videoReader->close();
 
-    if(this->videoReader!=nullptr)
+
+    if(this->videoReader!=nullptr){
+        this->videoReader->close();
         delete this->videoReader;
+    }
 
     if(this->frameData!=nullptr)
         delete this->frameData;
+
+    if(this->hwAccelsDecoder!=nullptr){
+
+        this->hwAccelsDecoder->close();
+        delete this->hwAccelsDecoder;
+    }
 }
 
 
@@ -90,30 +144,68 @@ void VideoPlayerWidget::paintGL() {
     glBindTexture(GL_TEXTURE_2D,this->tex_handle);
     glBegin(GL_QUADS);
         glTexCoord2d(0,0); glVertex2i(0,0);
-        glTexCoord2d(1,0); glVertex2i(0 + this->frameData->getWidth() * 2 , 0);
-        glTexCoord2d(1,1); glVertex2i(0 + this->frameData->getWidth() * 2 , 0 + this->frameData->getHeight() *2 );
-        glTexCoord2d(0,1); glVertex2i(0,0 + this->frameData->getHeight() * 2);
+        glTexCoord2d(1,0); glVertex2i(0 + this->width() , 0);
+        glTexCoord2d(1,1); glVertex2i(0 + this->width() , 0 + this->height() );
+        glTexCoord2d(0,1); glVertex2i(0,0 + this->frameData->getHeight() );
     glEnd();
     glDisable(GL_TEXTURE_2D);
 }
 
+#include <qelapsedtimer.h>
 void VideoPlayerWidget::framePerSecTimePassed() {
 
+
+    QElapsedTimer timer;
+    timer.start();
     if(videoReader->readFrame(*this->frameData)==false){
         qDebug() <<"failed to read Frame ";
         this->timer->stop();
         return;
     }
 
+    qint64 elapsed=timer.elapsed();
+    this->time+=elapsed;
+    qDebug() << " timer elapsed   " << elapsed;
+
     qDebug() << "pts  " << this->frameData->getPts();
     qDebug() <<" ptrRealTime  " << this->frameData->getPtsRealTime();
     qDebug() <<"frameIndex" << this->frameData->getFrameIndex();
 
-    this->update();
+    //this->update();
 
     if(this->frameData->isFinalFrame()==true){
 
         this->timer->stop();
+        qDebug() << " videoReader total time : " <<this->time;
     }
 
 }
+
+void VideoPlayerWidget::framePerSecTimePassedHw() {
+
+
+    QElapsedTimer timer;
+    timer.start();
+    if(this->hwAccelsDecoder->readFrame(*this->frameData)==false){
+        qDebug() <<"failed to read Frame ";
+        this->timer->stop();
+        return;
+    }
+
+    qint64 elapsed=timer.elapsed();
+    this->time+=elapsed;
+    qDebug() << " timer elapsed   " << elapsed;
+
+    qDebug() << "pts  " << this->frameData->getPts();
+    qDebug() <<" ptrRealTime  " << this->frameData->getPtsRealTime();
+    qDebug() <<"frameIndex" << this->frameData->getFrameIndex();
+
+    //this->update();
+
+    if(this->frameData->isFinalFrame()==true){
+
+        this->timer->stop();
+        qDebug() << " Hw total time : " <<this->time;
+    }
+}
+

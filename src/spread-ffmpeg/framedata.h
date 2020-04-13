@@ -7,6 +7,7 @@
 class FrameData{
 
     friend class VideoReader;
+    friend class HwAccelsDecoder;
 
 private:
     int width;

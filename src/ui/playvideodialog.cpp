@@ -4,6 +4,11 @@
 #include "videoplayerwidget.h"
 #include <qmessagebox.h>
 
+
+#include "src/spread-ffmpeg/hwaccelsdecoder.h"
+#include <qdebug.h>
+#include "src/spread-ffmpeg/framedata.h"
+
 PlayVideoDialog::PlayVideoDialog(QWidget *parent)
     :QDialog(parent) , videoPlayerWidget(nullptr) {
 
@@ -60,6 +65,35 @@ void PlayVideoDialog::playButtonClicked(){
         return;
 
     }
+
+/*
+    HwAccelsDecoder *decoder=new  HwAccelsDecoder;
+
+    if(decoder->open(ui.videoFilePathLineEdit->text().toUtf8()) == false){
+
+        qDebug() <<"asdsad";
+    }
+    else{
+
+        qDebug() <<" kkk";
+
+
+        FrameData data(decoder->getWidth(),decoder->getHeight());
+
+        bool result;
+        do{
+
+
+            result = decoder->readFrame(data);
+            qDebug() << " frameNumber " << data.getFrameIndex();
+            qDebug() << " pts " <<  data.getPts();
+            qDebug() << " pts real time " << data.getPtsRealTime();
+
+        }while(data.isFinalFrame()!=true && result== true);
+
+    }
+*/
+
 
     if(this->videoPlayerWidget!=nullptr){
 

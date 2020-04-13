@@ -52,6 +52,8 @@ list(APPEND SOURCES
     src/spread-ffmpeg/framedata.h
     src/spread-ffmpeg/remuxer.cpp
     src/spread-ffmpeg/remuxer.h
+    src/spread-ffmpeg/hwaccelsdecoder.cpp
+    src/spread-ffmpeg/hwaccelsdecoder.h
 )
 
 

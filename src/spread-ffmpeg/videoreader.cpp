@@ -139,14 +139,14 @@ bool VideoReader::readFrame(FrameData &frameData){
 
                 av_packet_unref(this->avPacket);
 
-                av_frame_unref(this->avFrame);
+                //av_frame_unref(this->avFrame);
 
                 this->invalidFrameCount++;
                 continue;
             }
             else if( response == AVERROR_EOF){
 
-                av_packet_unref(this->avPacket);
+                //av_packet_unref(this->avPacket);
 
                 av_frame_unref(this->avFrame);
 
@@ -157,7 +157,7 @@ bool VideoReader::readFrame(FrameData &frameData){
                 printf("Failed to decode packet: %s\n",av_err2str(response));
 
                 av_packet_unref(this->avPacket);
-                av_frame_unref(this->avFrame);
+                //av_frame_unref(this->avFrame);
 
 
                 return false;
@@ -182,7 +182,7 @@ bool VideoReader::readFrame(FrameData &frameData){
         frameData.finalFrame=true;
     }
 
-
+/*
 
     if(this->swsContext==NULL){
 
@@ -201,7 +201,7 @@ bool VideoReader::readFrame(FrameData &frameData){
     int dest_linesize[4] = { frameData.width *4, 0, 0, 0};
 
     sws_scale(this->swsContext,this->avFrame->data,this->avFrame->linesize, 0, this->avFrame->height, dest, dest_linesize);
-
+*/
 
     av_frame_unref(this->avFrame);
 
@@ -211,7 +211,15 @@ bool VideoReader::readFrame(FrameData &frameData){
 
 bool VideoReader::close(){
 
-    sws_freeContext(this->swsContext);
+    if(this->opened==false)
+        return false;
+
+    if(this->closed==true)
+        return false;
+
+    if(this->swsContext!=NULL)
+        sws_freeContext(this->swsContext);
+
     avformat_close_input(&this->avFormatContext);
     av_frame_free(&this->avFrame);
     av_packet_free(&this->avPacket);

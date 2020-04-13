@@ -3,12 +3,16 @@
 #include "videoplayerwidget.h"
 #include "playvideodialog.h"
 
+#include "src/spread-ffmpeg/hwaccelsdecoder.h"
+
 MainWindow::MainWindow(QWidget *parent)
     :QMainWindow(parent), playVideoDialog(nullptr) {
 
     ui.setupUi(this);
 
     connect(ui.playButton,&QPushButton::clicked,this,&MainWindow::playButtonClicked);
+
+
 }
 
 
