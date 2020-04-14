@@ -146,9 +146,11 @@ void VideoPlayerWidget::paintGL() {
         glTexCoord2d(0,0); glVertex2i(0,0);
         glTexCoord2d(1,0); glVertex2i(0 + this->width() , 0);
         glTexCoord2d(1,1); glVertex2i(0 + this->width() , 0 + this->height() );
-        glTexCoord2d(0,1); glVertex2i(0,0 + this->frameData->getHeight() );
+        glTexCoord2d(0,1); glVertex2i(0,0 + this->height() );
     glEnd();
     glDisable(GL_TEXTURE_2D);
+
+
 }
 
 #include <qelapsedtimer.h>
