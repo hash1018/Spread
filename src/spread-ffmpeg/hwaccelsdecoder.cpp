@@ -285,7 +285,7 @@ bool HwAccelsDecoder::readFrame(FrameData &frameData){
             int response=avcodec_send_packet(this->avCodecContext,this->avPacket);
             if(response  < 0){
 
-                printf("Failed to decode packet: %s\n",av_err2str(response));
+                printf("Failed to decode packet: \n");
 
                 av_packet_unref(this->avPacket);
 
@@ -311,7 +311,7 @@ bool HwAccelsDecoder::readFrame(FrameData &frameData){
             }
             else if(response < 0){
 
-                printf("Failed to decode packet: %s\n",av_err2str(response));
+                printf("Failed to decode packet: \n");
 
                 av_packet_unref(this->avPacket);
                 av_frame_unref(this->avFrame);
@@ -374,7 +374,7 @@ bool HwAccelsDecoder::readFrame(FrameData &frameData){
 */
 
 
-/*
+
 
     if(this->swsContext==NULL){
 
@@ -394,7 +394,7 @@ bool HwAccelsDecoder::readFrame(FrameData &frameData){
     int dest_linesize[4] = { frameData.width *4, 0, 0, 0};
 
     sws_scale(this->swsContext,finalFrame->data,finalFrame->linesize, 0, finalFrame->height, dest, dest_linesize);
-*/
+
 
     av_frame_unref(swFrame);
     av_frame_free(&swFrame);

@@ -6,16 +6,9 @@ project(ffmpeg)
 if(APPLE)
 
     add_library(ffmpeg INTERFACE IMPORTED GLOBAL)
+
     target_include_directories(ffmpeg INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-mac/include
-    #${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-mac/include/libavcodec
-    #${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-mac/include/libavdevice
-    #${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-mac/include/libavfilter
-    #${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-mac/include/libavformat
-    #${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-mac/include/libavutil
-    #${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-mac/include/libpostproc
-    #${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-mac/include/libswscale
-    #${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-mac/include/libswresample
     )
 
 

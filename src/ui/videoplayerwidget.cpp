@@ -14,9 +14,9 @@ VideoPlayerWidget::VideoPlayerWidget(const QString &filePath, QWidget *parent)
 
     this->time=0;
 
-    this->initVideoReader();
+    //this->initVideoReader();
 
-    //this->initHwDecoder();
+    this->initHwDecoder();
 }
 
 void VideoPlayerWidget::initVideoReader(){
@@ -173,7 +173,7 @@ void VideoPlayerWidget::framePerSecTimePassed() {
     qDebug() <<" ptrRealTime  " << this->frameData->getPtsRealTime();
     qDebug() <<"frameIndex" << this->frameData->getFrameIndex();
 
-    //this->update();
+    this->update();
 
     if(this->frameData->isFinalFrame()==true){
 
@@ -202,7 +202,7 @@ void VideoPlayerWidget::framePerSecTimePassedHw() {
     qDebug() <<" ptrRealTime  " << this->frameData->getPtsRealTime();
     qDebug() <<"frameIndex" << this->frameData->getFrameIndex();
 
-    //this->update();
+    this->update();
 
     if(this->frameData->isFinalFrame()==true){
 

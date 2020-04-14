@@ -128,7 +128,7 @@ bool VideoReader::readFrame(FrameData &frameData){
             int response=avcodec_send_packet(this->avCodecContext,this->avPacket);
             if(response  < 0){
 
-                printf("Failed to decode packet: %s\n",av_err2str(response));
+                printf("Failed to decode packet:\n");
 
                 av_packet_unref(this->avPacket);
 
@@ -154,7 +154,7 @@ bool VideoReader::readFrame(FrameData &frameData){
             }
             else if(response < 0){
 
-                printf("Failed to decode packet: %s\n",av_err2str(response));
+                printf("Failed to decode packet: \n");
 
                 av_packet_unref(this->avPacket);
                 //av_frame_unref(this->avFrame);
@@ -182,7 +182,7 @@ bool VideoReader::readFrame(FrameData &frameData){
         frameData.finalFrame=true;
     }
 
-/*
+
 
     if(this->swsContext==NULL){
 
@@ -201,7 +201,7 @@ bool VideoReader::readFrame(FrameData &frameData){
     int dest_linesize[4] = { frameData.width *4, 0, 0, 0};
 
     sws_scale(this->swsContext,this->avFrame->data,this->avFrame->linesize, 0, this->avFrame->height, dest, dest_linesize);
-*/
+
 
     av_frame_unref(this->avFrame);
 
