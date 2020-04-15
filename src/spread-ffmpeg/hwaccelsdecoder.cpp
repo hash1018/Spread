@@ -272,6 +272,9 @@ bool HwAccelsDecoder::open(const char *filePath){
             break;
     }
 
+    delete [] list;
+
+
     this->avCodecContext=avcodec_alloc_context3(av_codec);
     if(!this->avCodecContext){
         printf("Couldn't create AVCodecContext\n");
