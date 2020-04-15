@@ -48,6 +48,7 @@ void VideoPlayerWidget::initVideoReader(){
 
     this->timer->setInterval(1000/ this->videoReader->getFps());
     this->timer->start();
+
 }
 
 void VideoPlayerWidget::initHwDecoder(){

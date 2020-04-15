@@ -101,7 +101,9 @@ bool VideoReader::open(const char *fileName){
         return false;
     }
 
-    this->fps=this->avFormatContext->streams[this->videoStreamIndex]->avg_frame_rate.num;
+    this->fps=this->avFormatContext->streams[this->videoStreamIndex]->avg_frame_rate.num /
+            this->avFormatContext->streams[this->videoStreamIndex]->avg_frame_rate.den;
+
     this->totalFrameCount=this->avFormatContext->streams[this->videoStreamIndex]->nb_frames;
     this->opened=true;
     return true;
@@ -175,7 +177,8 @@ bool VideoReader::readFrame(FrameData &frameData){
             (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.num /
             (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den;
     frameData.frameIndex=(double(this->fps*this->avFrame->pts) /
-            (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den);
+                          (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den) *
+            (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.num;
 
     if(frameData.frameIndex == this->totalFrameCount - this->invalidFrameCount -1 /* -1 is because frameNumber starts from zero.*/){
 

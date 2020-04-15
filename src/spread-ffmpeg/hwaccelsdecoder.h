@@ -189,7 +189,7 @@ static enum AVPixelFormat getHwFormat(AVCodecContext *avCodecContext,
             return *p;
     }
 
-    fprintf(stderr, "Failed to get HW surface format.\n");
+    fprintf(stderr, "getHwFormat Failed to get HW surface format.\n");
     return AV_PIX_FMT_NONE;
 }
 

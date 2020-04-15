@@ -160,7 +160,42 @@ bool HwAccelsDecoder::open(const char *filePath){
         return false;
     }
 
-    this->type=AVHWDeviceType::AV_HWDEVICE_TYPE_VIDEOTOOLBOX;
+    //this->type=AVHWDeviceType::AV_HWDEVICE_TYPE_VIDEOTOOLBOX;
+
+    //this->type=AVHWDeviceType::AV_HWDEVICE_TYPE_NONE;
+
+
+    int count=0;
+    AVHWDeviceType type=AV_HWDEVICE_TYPE_NONE;
+
+
+    //this->type=AVHWDeviceType::AV_HWDEVICE_TYPE_QSV;
+    //this->type=AVHWDeviceType::AV_HWDEVICE_TYPE_DXVA2;
+
+
+    while((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE){
+        printf( av_hwdevice_get_type_name(type));
+        printf("\n");
+        count++;
+    }
+
+    if(count==0){
+
+        printf("no supported hardwareDevice format\n");
+        return false;
+    }
+
+    int index=0;
+    enum AVHWDeviceType *list=new enum AVHWDeviceType[count];
+
+    type=AV_HWDEVICE_TYPE_NONE;
+    while((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE){
+
+        list[index]=type;
+        index++;
+    }
+
+
 
     this->avFormatContext=avformat_alloc_context();
     if(!this->avFormatContext){
@@ -204,19 +239,37 @@ bool HwAccelsDecoder::open(const char *filePath){
     }
 
     int i;
+    int j=0;
+    bool foundHwPixelFormat=false;
 
     for (i = 0;; i++) {
+        printf("%d\n",i);
         const AVCodecHWConfig *config = avcodec_get_hw_config(av_codec, i);
+
         if (!config) {
-            fprintf(stderr, "Decoder %s does not support device type %s.\n",
-                    av_codec->name, av_hwdevice_get_type_name(type));
-            return -1;
+            fprintf(stderr, "Decoder %s does not support device type\n" /*%s.  %d\n"*/,
+                    av_codec->name/*, av_hwdevice_get_type_name(this->type), i*/);
+            return false;
         }
-        if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
-                config->device_type == type) {
-            hwPixelFormat = config->pix_fmt;
+
+        j=0;
+
+        for(j; j< count; j++){
+
+            if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
+                    config->device_type == list[j]) {
+                hwPixelFormat = config->pix_fmt;
+
+                printf("fdfdfdf\n");
+                printf("%s\n", av_hwdevice_get_type_name(list[j]));
+                this->type=list[j];
+                foundHwPixelFormat=true;
+                break;
+            }
+        }
+
+        if(foundHwPixelFormat==true)
             break;
-        }
     }
 
     this->avCodecContext=avcodec_alloc_context3(av_codec);
@@ -231,7 +284,7 @@ bool HwAccelsDecoder::open(const char *filePath){
     }
 
     this->avCodecContext->get_format  = getHwFormat;
-    if (hw_decoder_init(this->avCodecContext, type) < 0){
+    if (hw_decoder_init(this->avCodecContext, this->type) < 0){
 
         printf(" failed to hw_decoder_init\n");
         return false;
@@ -257,7 +310,8 @@ bool HwAccelsDecoder::open(const char *filePath){
         return false;
     }
 
-    this->fps=this->avFormatContext->streams[this->videoStreamIndex]->avg_frame_rate.num;
+    this->fps=this->avFormatContext->streams[this->videoStreamIndex]->avg_frame_rate.num /
+            this->avFormatContext->streams[this->videoStreamIndex]->avg_frame_rate.den;
     this->totalFrameCount=this->avFormatContext->streams[this->videoStreamIndex]->nb_frames;
     this->opened=true;
     return true;
@@ -294,6 +348,8 @@ bool HwAccelsDecoder::readFrame(FrameData &frameData){
             response= avcodec_receive_frame(this->avCodecContext,this->avFrame);
             if(response == AVERROR(EAGAIN)) {
 
+                printf("eagain");
+
                 av_packet_unref(this->avPacket);
 
                 av_frame_unref(this->avFrame);
@@ -302,6 +358,8 @@ bool HwAccelsDecoder::readFrame(FrameData &frameData){
                 continue;
             }
             else if( response == AVERROR_EOF){
+
+                printf("averror_eof");
 
                 av_packet_unref(this->avPacket);
 
@@ -361,7 +419,8 @@ bool HwAccelsDecoder::readFrame(FrameData &frameData){
             (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.num /
             (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den;
     frameData.frameIndex=(double(this->fps*this->avFrame->pts) /
-            (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den);
+                          (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.den) *
+            (double)this->avFormatContext->streams[this->videoStreamIndex]->time_base.num;
 
     if(frameData.frameIndex == this->totalFrameCount - this->invalidFrameCount -1 /* -1 is because frameNumber starts from zero.*/){
 
