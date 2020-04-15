@@ -389,18 +389,58 @@ bool HwAccelsDecoder::readFrame(FrameData &frameData){
 
         frameData.finalFrame=true;
     }
-/*
+
+    /*
+    printf("finalFormat %s \n",av_get_pix_fmt_name((enum AVPixelFormat)finalFrame->format) );
+
+
+
+
     int size = av_image_get_buffer_size((enum AVPixelFormat) finalFrame->format, finalFrame->width,
                                     finalFrame->height, 1);
+
+    if(frameData.getBufferSize() != size){
+
+        frameData.setBufferSize(size);
+    }
+
+    printf("size %d\n", size );
+
+
+    uint8_t* buffer=NULL;
+    buffer = (uint8_t*)av_malloc(size);
+    if (buffer == NULL) {
+
+        printf("not alloced\n");
+        return false;
+
+    }
+    int ret=av_image_copy_to_buffer(buffer, size,
+                                  (const uint8_t * const *)finalFrame->data,
+                                  (const int *)finalFrame->linesize, (enum AVPixelFormat) finalFrame->format,
+                                  finalFrame->width, finalFrame->height, 1);
+
+    if(ret < 0 ){
+
+        printf("failed copy\n");
+        return false;
+    }
+
+    frameData.copyToBuffer(buffer);
+
+    av_freep(&buffer);
+
+
+
+    printf("kkkkk\n");
 
 */
 
 
 
-
     if(this->swsContext==NULL){
 
-        this->swsContext=sws_getContext(finalFrame->width, finalFrame->height, //this->avCodecContext->pix_fmt
+        this->swsContext=sws_getContext(finalFrame->width, finalFrame->height,
                                         (enum AVPixelFormat) finalFrame->format,
                                        frameData.width,frameData.height, AV_PIX_FMT_RGB0,
                                        SWS_FAST_BILINEAR, NULL,NULL,NULL);

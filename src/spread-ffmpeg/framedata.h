@@ -13,6 +13,7 @@ private:
     int width;
     int height;
     uint8_t *buffer;
+    int bufferSize;
 
     int64_t pts;
 
@@ -25,6 +26,9 @@ public:
     FrameData(int width,int height);
     ~FrameData();
 
+    void setBufferSize(int bufferSize);
+    void copyToBuffer(uint8_t *buffer);
+
 public:
     inline int getWidth() const {return this->width;}
     inline int getHeight() const {return this->height;}
@@ -33,6 +37,7 @@ public:
     inline int getFrameIndex() const {return this->frameIndex;}
     inline double getPtsRealTime() const {return this->ptsRealTime;}
     inline bool isFinalFrame() const {return this->finalFrame;}
+    inline int getBufferSize() const {return this->bufferSize;}
 };
 
 #endif // FRAMEDATA_H

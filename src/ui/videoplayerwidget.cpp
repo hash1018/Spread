@@ -137,8 +137,8 @@ void VideoPlayerWidget::paintGL() {
 
 
     //load frame into texture.
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,this->frameData->getWidth(),this->frameData->getHeight(),
-                     0,GL_RGBA,GL_UNSIGNED_BYTE,this->frameData->getBuffer());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB /*GL_LUMINANCE*/, this->frameData->getWidth(), this->frameData->getHeight(),
+                     0, /*GL_LUMINANCE16 ,*/GL_RGBA, GL_UNSIGNED_BYTE, this->frameData->getBuffer());
 
     //Render
     glEnable(GL_TEXTURE_2D);
