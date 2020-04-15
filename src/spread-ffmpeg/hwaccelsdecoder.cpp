@@ -160,39 +160,14 @@ bool HwAccelsDecoder::open(const char *filePath){
         return false;
     }
 
-    //this->type=AVHWDeviceType::AV_HWDEVICE_TYPE_VIDEOTOOLBOX;
-
-    //this->type=AVHWDeviceType::AV_HWDEVICE_TYPE_NONE;
-
-
+    enum AVHWDeviceType *list=NULL;
     int count=0;
-    AVHWDeviceType type=AV_HWDEVICE_TYPE_NONE;
+    HwAccelsDecoder::getSupportedHwDeviceTypes(&list,&count);
 
+    if(list==NULL){
 
-    //this->type=AVHWDeviceType::AV_HWDEVICE_TYPE_QSV;
-    //this->type=AVHWDeviceType::AV_HWDEVICE_TYPE_DXVA2;
-
-
-    while((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE){
-        printf( av_hwdevice_get_type_name(type));
-        printf("\n");
-        count++;
-    }
-
-    if(count==0){
-
-        printf("no supported hardwareDevice format\n");
+        printf("no supported hwDevice.\n");
         return false;
-    }
-
-    int index=0;
-    enum AVHWDeviceType *list=new enum AVHWDeviceType[count];
-
-    type=AV_HWDEVICE_TYPE_NONE;
-    while((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE){
-
-        list[index]=type;
-        index++;
     }
 
 
@@ -238,41 +213,26 @@ bool HwAccelsDecoder::open(const char *filePath){
         return false;
     }
 
-    int i;
-    int j=0;
-    bool foundHwPixelFormat=false;
+    int i = 0;
 
-    for (i = 0;; i++) {
-        printf("%d\n",i);
-        const AVCodecHWConfig *config = avcodec_get_hw_config(av_codec, i);
+    for(i; i< count; i++){
 
-        if (!config) {
-            fprintf(stderr, "Decoder %s does not support device type\n" /*%s.  %d\n"*/,
-                    av_codec->name/*, av_hwdevice_get_type_name(this->type), i*/);
-            return false;
-        }
+        if(HwAccelsDecoder::checkIfCodecSupportDeviceType(av_codec,list[i])==true){
 
-        j=0;
-
-        for(j; j< count; j++){
-
-            if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
-                    config->device_type == list[j]) {
-                hwPixelFormat = config->pix_fmt;
-
-                printf("fdfdfdf\n");
-                printf("%s\n", av_hwdevice_get_type_name(list[j]));
-                this->type=list[j];
-                foundHwPixelFormat=true;
-                break;
-            }
-        }
-
-        if(foundHwPixelFormat==true)
+            this->type = list[i];
             break;
+        }
     }
 
     delete [] list;
+
+    if(i == count){
+
+        printf("Codec doesn't support any of deviceType\n");
+        return false;
+    }
+
+
 
 
     this->avCodecContext=avcodec_alloc_context3(av_codec);
@@ -539,5 +499,63 @@ int HwAccelsDecoder::hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceT
     ctx->hw_device_ctx = av_buffer_ref(this->hwDeviceContext);
 
     return err;
+}
+
+
+void HwAccelsDecoder::getSupportedHwDeviceTypes(enum AVHWDeviceType* *list,int *count) {
+
+    AVHWDeviceType type = AV_HWDEVICE_TYPE_NONE;
+
+    *count = 0;
+    while((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE){
+        printf( "%s" ,av_hwdevice_get_type_name(type));
+        printf("\n");
+        (*count)++;
+    }
+
+    if(*count == 0){
+
+        *list = NULL;
+        return;
+    }
+
+    int index=0;
+    *list = new enum AVHWDeviceType[*count];
+
+    type = AV_HWDEVICE_TYPE_NONE;
+    while((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE){
+
+        (*list)[index]=type;
+        index++;
+    }
+
+}
+
+
+bool HwAccelsDecoder::checkIfCodecSupportDeviceType(AVCodec *avCodec,enum AVHWDeviceType type){
+
+    int i = 0;
+
+    for (i = 0;; i++) {
+
+        const AVCodecHWConfig *config = avcodec_get_hw_config(avCodec, i);
+
+        if (!config) {
+            fprintf(stderr, "Decoder %s does not support device type\n" /*%s.  %d\n"*/,
+                    avCodec->name/*, av_hwdevice_get_type_name(this->type), i*/);
+            return false;
+        }
+
+        if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
+                config->device_type == type) {
+
+            hwPixelFormat = config->pix_fmt;
+            printf("%s\n", av_hwdevice_get_type_name(type));
+
+            break;
+        }
+    }
+
+    return true;
 }
 

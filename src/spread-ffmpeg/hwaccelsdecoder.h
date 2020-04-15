@@ -247,6 +247,12 @@ public:
 private:
     AVBufferRef *hwDeviceContext = NULL;
     int hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type);
+
+
+
+public:
+    static void getSupportedHwDeviceTypes(enum AVHWDeviceType* *list,int *count);
+    static bool checkIfCodecSupportDeviceType(AVCodec *avCodec,enum AVHWDeviceType type);
 };
 
 
