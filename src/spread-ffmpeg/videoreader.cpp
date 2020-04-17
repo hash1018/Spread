@@ -191,7 +191,8 @@ bool VideoReader::readFrame(FrameData &frameData){
         frameData.finalFrame=true;
     }
 
-
+    ////////////////////////////////////  11
+/*
     printf("this->avFrame %s \n",av_get_pix_fmt_name((enum AVPixelFormat)this->avFrame->format) );
 
 
@@ -234,16 +235,19 @@ bool VideoReader::readFrame(FrameData &frameData){
 
 
     printf("kkkkk\n");
+*/
 
 
-
-
+///////////////////////////////////// 22
 /*
+
     if(this->swsContext==NULL){
 
-        this->swsContext=sws_getContext(this->avFrame->width, this->avFrame->height, this->avCodecContext->pix_fmt,
-                                       frameData.width,frameData.height, AV_PIX_FMT_RGB0,
-                                       SWS_FAST_BILINEAR, NULL,NULL,NULL);
+       // this->swsContext=sws_getContext(this->avFrame->width, this->avFrame->height, this->avCodecContext->pix_fmt,
+       //                                frameData.width,frameData.height, AV_PIX_FMT_RGB0,
+       //                                SWS_FAST_BILINEAR, NULL,NULL,NULL);
+
+
     }
 
     if(!this->swsContext){
@@ -252,11 +256,67 @@ bool VideoReader::readFrame(FrameData &frameData){
         return false;
     }
 
-    uint8_t *dest[4] = {frameData.buffer, NULL, NULL, NULL};
-    int dest_linesize[4] = { frameData.width *4, 0, 0, 0};
 
-    sws_scale(this->swsContext,this->avFrame->data,this->avFrame->linesize, 0, this->avFrame->height, dest, dest_linesize);
+    //uint8_t *dest[4] = {frameData.buffer, NULL, NULL, NULL};
+    //int dest_linesize[4] = { frameData.width *4, 0, 0, 0};
+
+    //sws_scale(this->swsContext,this->avFrame->data,this->avFrame->linesize, 0, this->avFrame->height, dest, dest_linesize);
 */
+
+
+
+///////////////////////////////////////  33
+
+    int size = av_image_get_buffer_size(AVPixelFormat::AV_PIX_FMT_YUV420P, this->avFrame->width,
+                                    this->avFrame->height, 1);
+
+
+
+    if(this->swsContext == NULL){
+        this->swsContext=sws_getContext(this->avFrame->width, this->avFrame->height, this->avCodecContext->pix_fmt,
+                                        frameData.width,frameData.height, AV_PIX_FMT_YUV420P,
+                                        SWS_FAST_BILINEAR, NULL,NULL,NULL);
+    }
+
+    if(!this->swsContext){
+
+        printf("Couldn't initialize swsContext\n");
+        return false;
+    }
+
+    AVPicture picture;
+    avpicture_alloc(&picture,AVPixelFormat::AV_PIX_FMT_YUV420P,this->avFrame->width,this->avFrame->height);
+
+    sws_scale(this->swsContext,this->avFrame->data,this->avFrame->linesize,0,frameData.height,picture.data,picture.linesize);
+
+    if(frameData.getBufferSize() != size){
+        frameData.setBufferSize(size);
+    }
+
+    uint8_t *buffer =new uint8_t [size];
+
+    memcpy(buffer,picture.data[0],this->avFrame->width*this->avFrame->height);
+
+    buffer += this->avFrame->width * this->avFrame->height;
+    memcpy(buffer,picture.data[1],this->avFrame->width * this->avFrame->height / 4);
+
+    buffer += this->avFrame->width * this->avFrame->height / 4;
+    memcpy(buffer,picture.data[2],this->avFrame->width * this->avFrame->height / 4);
+
+
+    buffer -= this->avFrame->width * this->avFrame->height;
+    buffer -= this->avFrame->width * this->avFrame->height / 4;
+    frameData.copyToBuffer(buffer);
+
+    avpicture_free(&picture);
+    delete [] buffer;
+
+
+
+    printf ("sdsa %d  ",size);
+
+    /////////////////////
+
 
     av_frame_unref(this->avFrame);
 
