@@ -311,10 +311,6 @@ bool VideoReader::readFrame(FrameData &frameData){
     avpicture_free(&picture);
     delete [] buffer;
 
-
-
-    printf ("sdsa %d  ",size);
-
     /////////////////////
 
 
