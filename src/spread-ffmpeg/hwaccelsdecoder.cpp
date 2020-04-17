@@ -181,6 +181,7 @@ bool HwAccelsDecoder::readFrame(FrameData &frameData){
                 av_packet_unref(this->avPacket);
 
                 return false;
+
             }
             response= avcodec_receive_frame(this->avCodecContext,this->avFrame);
             if(response == AVERROR(EAGAIN)) {
@@ -310,7 +311,7 @@ bool HwAccelsDecoder::readFrame(FrameData &frameData){
 
 */
 
-
+/*
 
     if(this->swsContext==NULL){
 
@@ -330,6 +331,69 @@ bool HwAccelsDecoder::readFrame(FrameData &frameData){
     int dest_linesize[4] = { frameData.width *4, 0, 0, 0};
 
     sws_scale(this->swsContext,finalFrame->data,finalFrame->linesize, 0, finalFrame->height, dest, dest_linesize);
+*/
+
+
+
+
+
+
+    /////////////////////////
+    ///
+    ///
+    ///
+    int size = av_image_get_buffer_size(AVPixelFormat::AV_PIX_FMT_YUV420P, finalFrame->width,
+                                    finalFrame->height, 1);
+
+
+
+    if(this->swsContext == NULL){
+        this->swsContext=sws_getContext(finalFrame->width, finalFrame->height, (enum AVPixelFormat)finalFrame->format,
+                                        frameData.width,frameData.height, AV_PIX_FMT_YUV420P,
+                                        SWS_FAST_BILINEAR, NULL,NULL,NULL);
+    }
+
+    if(!this->swsContext){
+
+        printf("Couldn't initialize swsContext\n");
+        return false;
+    }
+
+    AVPicture picture;
+    avpicture_alloc(&picture,AVPixelFormat::AV_PIX_FMT_YUV420P,finalFrame->width,finalFrame->height);
+
+    sws_scale(this->swsContext,finalFrame->data,finalFrame->linesize,0,frameData.height,picture.data,picture.linesize);
+
+    if(frameData.getBufferSize() != size){
+        frameData.setBufferSize(size);
+    }
+
+    uint8_t *buffer =new uint8_t [size];
+
+    memcpy(buffer,picture.data[0],finalFrame->width*finalFrame->height);
+
+    buffer += finalFrame->width * finalFrame->height;
+    memcpy(buffer,picture.data[1],finalFrame->width * finalFrame->height / 4);
+
+    buffer += finalFrame->width * finalFrame->height / 4;
+    memcpy(buffer,picture.data[2],finalFrame->width * finalFrame->height / 4);
+
+
+    buffer -= finalFrame->width * finalFrame->height;
+    buffer -= finalFrame->width * finalFrame->height / 4;
+    frameData.copyToBuffer(buffer);
+
+    avpicture_free(&picture);
+    delete [] buffer;
+
+
+
+
+
+
+
+
+
 
 
     av_frame_unref(swFrame);
@@ -466,10 +530,10 @@ bool HwAccelsDecoder::checkIfCodecSupportDeviceType(AVCodec *avCodec,enum AVHWDe
             hwPixelFormat = config->pix_fmt;
             printf("%s\n", av_hwdevice_get_type_name(type));
 
-            break;
+            return true;
         }
     }
 
-    return true;
+    return false;
 }
 
