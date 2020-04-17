@@ -2,132 +2,6 @@
 #include "hwaccelsdecoder.h"
 #include "src/spread-ffmpeg/framedata.h"
 
-/*
-HwAccelsDecoder::HwAccelsDecoder() {
-
-    AVHWDeviceType type=AVHWDeviceType::AV_HWDEVICE_TYPE_NONE;
-
-    while((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE)
-        qDebug() << av_hwdevice_get_type_name(type);
-}
-
-HwAccelsDecoder::~HwAccelsDecoder() {
-
-
-
-    //packet.data = NULL;
-    //packet.size = 0;
-    //ret = decode_write(decoder_ctx, &packet);
-    //av_packet_unref(&packet);
-
-
-    //avcodec_free_context(&decoder_ctx);
-    //avformat_close_input(&input_ctx);
-    //av_buffer_unref(&hw_device_ctx);
-
-
-}
-
-bool HwAccelsDecoder::open(const char *filePath){
-
-
-    this->type=AVHWDeviceType::AV_HWDEVICE_TYPE_VIDEOTOOLBOX;
-
-
-    // open the input file
-    if (avformat_open_input(&input_ctx, filePath, NULL, NULL) != 0) {
-        qDebug() << "Cannot open input file";
-        return false;
-    }
-
-    if (avformat_find_stream_info(input_ctx, NULL) < 0) {
-        qDebug() << "Cannot find input stream information.";
-        return false;
-    }
-
-    // find the video stream information
-    ret = av_find_best_stream(input_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, &decoder, 0);
-    if (ret < 0) {
-        qDebug() << "Cannot find a video stream in the input file";
-        return false;
-    }
-
-    video_stream = ret;
-
-    int i;
-
-    for (i = 0;; i++) {
-        const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
-        if (!config) {
-            fprintf(stderr, "Decoder %s does not support device type %s.\n",
-                    decoder->name, av_hwdevice_get_type_name(type));
-            return -1;
-        }
-        if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
-                config->device_type == type) {
-            hw_pix_fmt = config->pix_fmt;
-            break;
-        }
-    }
-
-    if (!(decoder_ctx = avcodec_alloc_context3(decoder))){
-       // return AVERROR(ENOMEM);
-        qDebug() << " cannot allocate codec context";
-        return false;
-    }
-
-    video = input_ctx->streams[video_stream];
-    if (avcodec_parameters_to_context(decoder_ctx, video->codecpar) < 0){
-
-        qDebug() <<" cannot initialize codecContex";
-        return false;
-    }
-
-    decoder_ctx->get_format  = get_hw_format;
-    if (hw_decoder_init(decoder_ctx, type) < 0){
-
-        qDebug() <<" failed to hw_decoder_init";
-        return false;
-
-    }
-
-    if ((ret = avcodec_open2(decoder_ctx, decoder, NULL)) < 0) {
-        qDebug() << "Failed to open codec for stream";
-        return false;
-    }
-
-
-    return true;
-
-}
-
-bool HwAccelsDecoder::takeAction(){
-
-    qDebug() << "takeAction";
-
-    //open the file to dump raw data
-    //output_file = fopen(argv[3], "w+");
-
-    // actual decoding and dump the raw data
-    while (ret >= 0) {
-        if ((ret = av_read_frame(input_ctx, &packet)) < 0)
-            break;
-
-        if (video_stream == packet.stream_index)
-            ret = decode_write(decoder_ctx, &packet);
-
-        av_packet_unref(&packet);
-    }
-
-
-    return true;
-}
-
-*/
-
-
-
-
 
 HwAccelsDecoder::HwAccelsDecoder()
     :avFormatContext(NULL), avCodecContext(NULL), avFrame(NULL),
@@ -390,7 +264,7 @@ bool HwAccelsDecoder::readFrame(FrameData &frameData){
         frameData.finalFrame=true;
     }
 
-    /*
+/*
     printf("finalFormat %s \n",av_get_pix_fmt_name((enum AVPixelFormat)finalFrame->format) );
 
 

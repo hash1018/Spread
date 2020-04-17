@@ -3,6 +3,8 @@
 
 #include <qopenglwidget.h>
 #include <qstring.h>
+#include <qopenglbuffer.h>
+#include <QOpenGLFunctions>
 
 class VideoReader;
 class FrameData;
@@ -10,8 +12,11 @@ class QTimer;
 
 
 class HwAccelsDecoder;
+class QOpenGLTexture;
+class QOpenGLShader;
+class QOpenGLShaderProgram;
 
-class VideoPlayerWidget : public QOpenGLWidget {
+class VideoPlayerWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 
 private:
     FrameData *frameData;
@@ -22,7 +27,15 @@ private:
     HwAccelsDecoder *hwAccelsDecoder;
 
 private:
-    GLuint tex_handle;
+    //GLuint tex_handle;
+
+
+private:
+    QOpenGLShader *vertexShader;
+    QOpenGLShader *fragmentShader;
+    QOpenGLShaderProgram *shaderProgram;
+    QOpenGLBuffer *vbo;
+    QOpenGLTexture *texture;
 
 private:
     QTimer *timer;

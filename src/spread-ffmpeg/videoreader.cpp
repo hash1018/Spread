@@ -2,6 +2,12 @@
 #include "videoreader.h"
 #include "framedata.h"
 
+extern "C"{
+
+#include <libavutil/imgutils.h>
+
+}
+
 VideoReader::VideoReader()
     :avFormatContext(NULL), avCodecContext(NULL), avFrame(NULL),
       avPacket(NULL), swsContext(NULL), width(0), height(0),
@@ -141,14 +147,14 @@ bool VideoReader::readFrame(FrameData &frameData){
 
                 av_packet_unref(this->avPacket);
 
-                //av_frame_unref(this->avFrame);
+                av_frame_unref(this->avFrame);
 
                 this->invalidFrameCount++;
                 continue;
             }
             else if( response == AVERROR_EOF){
 
-                //av_packet_unref(this->avPacket);
+                av_packet_unref(this->avPacket);
 
                 av_frame_unref(this->avFrame);
 
@@ -159,7 +165,7 @@ bool VideoReader::readFrame(FrameData &frameData){
                 printf("Failed to decode packet: \n");
 
                 av_packet_unref(this->avPacket);
-                //av_frame_unref(this->avFrame);
+                av_frame_unref(this->avFrame);
 
 
                 return false;
@@ -186,7 +192,53 @@ bool VideoReader::readFrame(FrameData &frameData){
     }
 
 
+    printf("this->avFrame %s \n",av_get_pix_fmt_name((enum AVPixelFormat)this->avFrame->format) );
 
+
+
+
+    int size = av_image_get_buffer_size((enum AVPixelFormat) this->avFrame->format, this->avFrame->width,
+                                    this->avFrame->height, 1);
+
+    if(frameData.getBufferSize() != size){
+
+        frameData.setBufferSize(size);
+    }
+
+    printf("size %d\n", size );
+
+
+    uint8_t* buffer=NULL;
+    buffer = (uint8_t*)av_malloc(size);
+    if (buffer == NULL) {
+
+        printf("not alloced\n");
+        return false;
+
+    }
+    int ret=av_image_copy_to_buffer(buffer, size,
+                                  (const uint8_t * const *)this->avFrame->data,
+                                  (const int *)this->avFrame->linesize, (enum AVPixelFormat) this->avFrame->format,
+                                  this->avFrame->width, this->avFrame->height, 1);
+
+    if(ret < 0 ){
+
+        printf("failed copy\n");
+        return false;
+    }
+
+    frameData.copyToBuffer(buffer);
+
+    av_freep(&buffer);
+
+
+
+    printf("kkkkk\n");
+
+
+
+
+/*
     if(this->swsContext==NULL){
 
         this->swsContext=sws_getContext(this->avFrame->width, this->avFrame->height, this->avCodecContext->pix_fmt,
@@ -204,7 +256,7 @@ bool VideoReader::readFrame(FrameData &frameData){
     int dest_linesize[4] = { frameData.width *4, 0, 0, 0};
 
     sws_scale(this->swsContext,this->avFrame->data,this->avFrame->linesize, 0, this->avFrame->height, dest, dest_linesize);
-
+*/
 
     av_frame_unref(this->avFrame);
 
