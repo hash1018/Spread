@@ -7730,8 +7730,21 @@ Cyclic refresh.
 .RE
 .RS 4
 .RE
+.IP "\fBtune (\fR\fItune\fR\fB)\fR" 4
+.IX Item "tune (tune)"
+Set the distortion metric the encoder is tuned with. Default is \f(CW\*(C`psnr\*(C'\fR.
+.RS 4
+.IP "\fBpsnr (\fR\fI0\fR\fB)\fR" 4
+.IX Item "psnr (0)"
+.PD 0
+.IP "\fBssim (\fR\fI1\fR\fB)\fR" 4
+.IX Item "ssim (1)"
+.RE
+.RS 4
+.RE
 .IP "\fBlag-in-frames\fR" 4
 .IX Item "lag-in-frames"
+.PD
 Set the maximum number of frames which the encoder may keep in flight
 at any one time for lookahead purposes.  Defaults to the internal
 default of the library.
@@ -12364,6 +12377,9 @@ fmp4 files may be used in \s-1HLS\s0 version 7 and above.
 .IP "\fBhls_fmp4_init_filename\fR \fIfilename\fR" 4
 .IX Item "hls_fmp4_init_filename filename"
 Set filename to the fragment files header file, default filename is \fIinit.mp4\fR.
+.IP "\fBhls_fmp4_init_resend\fR \fIfilename\fR" 4
+.IX Item "hls_fmp4_init_resend filename"
+Resend init file after m3u8 file refresh every time, default is \fI0\fR.
 .Sp
 When \f(CW\*(C`var_stream_map\*(C'\fR is set with two or more variant streams, the
 \&\fIfilename\fR pattern must contain the string \*(L"%v\*(R", this string specifies
@@ -12603,6 +12619,21 @@ and they are mapped to the one video only variant streams with audio group name
 have and language is named \s-1ENG,\s0 the other audio language is named \s-1CHN.\s0
 .Sp
 By default, a single hls variant containing all the encoded streams is created.
+.Sp
+.Vb 8
+\&        ffmpeg \-y \-i input_with_subtitle.mkv \e
+\&         \-b:v:0 5250k \-c:v h264 \-pix_fmt yuv420p \-profile:v main \-level 4.1 \e
+\&         \-b:a:0 256k \e
+\&         \-c:s webvtt \-c:a mp2 \-ar 48000 \-ac 2 \-map 0:v \-map 0:a:0 \-map 0:s:0 \e
+\&         \-f hls \-var_stream_map "v:0,a:0,s:0,sgroup:subtitle" \e
+\&         \-master_pl_name master.m3u8 \-t 300 \-hls_time 10 \-hls_init_time 4 \-hls_list_size \e
+\&         10 \-master_pl_publish_rate 10  \-hls_flags \e
+\&         delete_segments+discont_start+split_by_time ./tmp/video.m3u8
+.Ve
+.Sp
+This example adds \f(CW\*(C`#EXT\-X\-MEDIA\*(C'\fR tag with \f(CW\*(C`TYPE=SUBTITLES\*(C'\fR in
+the master playlist with webvtt subtitle group name 'subtitle'. Please make sure
+the input file has one text subtitle stream at least.
 .IP "\fBcc_stream_map\fR" 4
 .IX Item "cc_stream_map"
 Map string which specifies different closed captions groups and their
@@ -12907,8 +12938,9 @@ index at the beginning of the file.
 .Sp
 If this option is set to a non-zero value, the muxer will reserve a given amount
 of space in the file header and then try to write the cues there when the muxing
-finishes. If the available space does not suffice, muxing will fail. A safe size
-for most use cases should be about 50kB per hour of video.
+finishes. If the reserved space does not suffice, no Cues will be written, the
+file will be finalized and writing the trailer will return an error.
+A safe size for most use cases should be about 50kB per hour of video.
 .Sp
 Note that cues are only written if the output is seekable and this option will
 have no effect if it is not.
@@ -20623,6 +20655,8 @@ RMS_trough
 Crest_factor
 Flat_factor
 Peak_count
+Noise_floor
+Noise_floor_count
 Bit_depth
 Dynamic_range
 Zero_crossings
@@ -20645,6 +20679,8 @@ RMS_peak
 RMS_trough
 Flat_factor
 Peak_count
+Noise_floor
+Noise_floor_count
 Bit_depth
 Number_of_samples
 Number_of_NaNs
@@ -20718,6 +20754,13 @@ Flatness (i.e. consecutive samples with the same value) of the signal at its pea
 .IX Item "Peak count"
 Number of occasions (not the number of samples) that the signal attained either
 \&\fIMin level\fR or \fIMax level\fR.
+.IP "\fBNoise floor dB\fR" 4
+.IX Item "Noise floor dB"
+Minimum local peak measured in dBFS over a short window.
+.IP "\fBNoise floor count\fR" 4
+.IX Item "Noise floor count"
+Number of occasions (not the number of samples) that the signal attained
+\&\fINoise floor\fR.
 .IP "\fBBit depth\fR" 4
 .IX Item "Bit depth"
 Overall bit depth of audio. Number of bits used for each sample.
@@ -24877,11 +24920,20 @@ Default is disabled.
 .IX Subsection "blackdetect"
 Detect video intervals that are (almost) completely black. Can be
 useful to detect chapter transitions, commercials, or invalid
-recordings. Output lines contains the time for the start, end and
-duration of the detected black interval expressed in seconds.
+recordings.
 .PP
-In order to display the output lines, you need to set the loglevel at
-least to the \s-1AV_LOG_INFO\s0 value.
+The filter outputs its detection analysis to both the log as well as
+frame metadata. If a black segment of at least the specified minimum
+duration is found, a line with the start and end timestamps as well
+as duration is printed to the log with level \f(CW\*(C`info\*(C'\fR. In addition,
+a log line with level \f(CW\*(C`debug\*(C'\fR is printed per frame showing the
+black amount detected for that frame.
+.PP
+The filter also attaches metadata to the first frame of a black
+segment with key \f(CW\*(C`lavfi.black_start\*(C'\fR and to the first frame
+after the black segment ends with key \f(CW\*(C`lavfi.black_end\*(C'\fR. The
+value is the frame's timestamp. This metadata is added regardless
+of the minimum duration specified.
 .PP
 The filter accepts the following options:
 .IP "\fBblack_min_duration, d\fR" 4
@@ -27478,6 +27530,8 @@ Default value is \fBnative\fR.
 Set path to model file specifying network architecture and its parameters.
 Note that different backends use different file formats. TensorFlow and native
 backend can load files for only its format.
+.PP
+It can also be finished with \fBdnn_processing\fR filter.
 .SS "deshake"
 .IX Subsection "deshake"
 Attempt to fix small changes in horizontal and/or vertical shift. This
@@ -27763,10 +27817,10 @@ Set the output name of the dnn network.
 \fIExamples\fR
 .IX Subsection "Examples"
 .IP "\(bu" 4
-Halve the red channle of the frame with format rgb24:
+Remove rain in rgb24 frame with can.pb (see \fBderain\fR filter):
 .Sp
 .Vb 1
-\&        ffmpeg \-i input.jpg \-vf format=rgb24,dnn_processing=model=halve_first_channel.model:input=dnn_in:output=dnn_out:dnn_backend=native out.native.png
+\&        ./ffmpeg \-i rain.jpg \-vf format=rgb24,dnn_processing=dnn_backend=tensorflow:model=can.pb:input=x:output=y derain.jpg
 .Ve
 .IP "\(bu" 4
 Halve the pixel value of the frame with format gray32f:
@@ -37951,13 +38005,16 @@ If diagonal field of view is set it overrides horizontal and vertical field of v
 .RE
 .IP "\fBpannini\fR" 4
 .IX Item "pannini"
-Pannini projection. \fI(output only)\fR
+Pannini projection.
 .Sp
 Format specific options:
 .RS 4
 .IP "\fBh_fov\fR" 4
 .IX Item "h_fov"
-Set pannini parameter.
+Set output pannini parameter.
+.IP "\fBih_fov\fR" 4
+.IX Item "ih_fov"
+Set input pannini parameter.
 .RE
 .RS 4
 .RE
@@ -38040,6 +38097,9 @@ Nearest neighbour.
 .IX Item "linear"
 .PD
 Bilinear interpolation.
+.IP "\fBlagrange9\fR" 4
+.IX Item "lagrange9"
+Lagrange9 interpolation.
 .IP "\fBcube\fR" 4
 .IX Item "cube"
 .PD 0
@@ -39183,6 +39243,14 @@ Set one of available transition effects:
 .IX Item "diagbl"
 .IP "\fBdiagbr\fR" 4
 .IX Item "diagbr"
+.IP "\fBhlslice\fR" 4
+.IX Item "hlslice"
+.IP "\fBhrslice\fR" 4
+.IX Item "hrslice"
+.IP "\fBvuslice\fR" 4
+.IX Item "vuslice"
+.IP "\fBvdslice\fR" 4
+.IX Item "vdslice"
 .RE
 .RS 4
 .PD

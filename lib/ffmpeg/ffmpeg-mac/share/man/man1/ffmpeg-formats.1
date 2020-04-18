@@ -2120,6 +2120,9 @@ fmp4 files may be used in \s-1HLS\s0 version 7 and above.
 .IP "\fBhls_fmp4_init_filename\fR \fIfilename\fR" 4
 .IX Item "hls_fmp4_init_filename filename"
 Set filename to the fragment files header file, default filename is \fIinit.mp4\fR.
+.IP "\fBhls_fmp4_init_resend\fR \fIfilename\fR" 4
+.IX Item "hls_fmp4_init_resend filename"
+Resend init file after m3u8 file refresh every time, default is \fI0\fR.
 .Sp
 When \f(CW\*(C`var_stream_map\*(C'\fR is set with two or more variant streams, the
 \&\fIfilename\fR pattern must contain the string \*(L"%v\*(R", this string specifies
@@ -2359,6 +2362,21 @@ and they are mapped to the one video only variant streams with audio group name
 have and language is named \s-1ENG,\s0 the other audio language is named \s-1CHN.\s0
 .Sp
 By default, a single hls variant containing all the encoded streams is created.
+.Sp
+.Vb 8
+\&        ffmpeg \-y \-i input_with_subtitle.mkv \e
+\&         \-b:v:0 5250k \-c:v h264 \-pix_fmt yuv420p \-profile:v main \-level 4.1 \e
+\&         \-b:a:0 256k \e
+\&         \-c:s webvtt \-c:a mp2 \-ar 48000 \-ac 2 \-map 0:v \-map 0:a:0 \-map 0:s:0 \e
+\&         \-f hls \-var_stream_map "v:0,a:0,s:0,sgroup:subtitle" \e
+\&         \-master_pl_name master.m3u8 \-t 300 \-hls_time 10 \-hls_init_time 4 \-hls_list_size \e
+\&         10 \-master_pl_publish_rate 10  \-hls_flags \e
+\&         delete_segments+discont_start+split_by_time ./tmp/video.m3u8
+.Ve
+.Sp
+This example adds \f(CW\*(C`#EXT\-X\-MEDIA\*(C'\fR tag with \f(CW\*(C`TYPE=SUBTITLES\*(C'\fR in
+the master playlist with webvtt subtitle group name 'subtitle'. Please make sure
+the input file has one text subtitle stream at least.
 .IP "\fBcc_stream_map\fR" 4
 .IX Item "cc_stream_map"
 Map string which specifies different closed captions groups and their
@@ -2663,8 +2681,9 @@ index at the beginning of the file.
 .Sp
 If this option is set to a non-zero value, the muxer will reserve a given amount
 of space in the file header and then try to write the cues there when the muxing
-finishes. If the available space does not suffice, muxing will fail. A safe size
-for most use cases should be about 50kB per hour of video.
+finishes. If the reserved space does not suffice, no Cues will be written, the
+file will be finalized and writing the trailer will return an error.
+A safe size for most use cases should be about 50kB per hour of video.
 .Sp
 Note that cues are only written if the output is seekable and this option will
 have no effect if it is not.

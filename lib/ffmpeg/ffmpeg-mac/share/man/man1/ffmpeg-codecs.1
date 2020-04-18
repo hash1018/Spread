@@ -3857,8 +3857,21 @@ Cyclic refresh.
 .RE
 .RS 4
 .RE
+.IP "\fBtune (\fR\fItune\fR\fB)\fR" 4
+.IX Item "tune (tune)"
+Set the distortion metric the encoder is tuned with. Default is \f(CW\*(C`psnr\*(C'\fR.
+.RS 4
+.IP "\fBpsnr (\fR\fI0\fR\fB)\fR" 4
+.IX Item "psnr (0)"
+.PD 0
+.IP "\fBssim (\fR\fI1\fR\fB)\fR" 4
+.IX Item "ssim (1)"
+.RE
+.RS 4
+.RE
 .IP "\fBlag-in-frames\fR" 4
 .IX Item "lag-in-frames"
+.PD
 Set the maximum number of frames which the encoder may keep in flight
 at any one time for lookahead purposes.  Defaults to the internal
 default of the library.

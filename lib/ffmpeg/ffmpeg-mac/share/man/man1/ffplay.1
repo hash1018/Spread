@@ -754,8 +754,9 @@ This option has been deprecated in favor of private options, try \-pixel_format.
 .IX Item "-stats"
 Print several playback statistics, in particular show the stream
 duration, the codec parameters, the current position in the stream and
-the audio/video synchronisation drift. It is on by default, to
-explicitly disable it you need to specify \f(CW\*(C`\-nostats\*(C'\fR.
+the audio/video synchronisation drift. It is shown by default, unless the
+log level is lower than \f(CW\*(C`info\*(C'\fR. Its display can be forced by manually
+specifying this option. To disable it, you need to specify \f(CW\*(C`\-nostats\*(C'\fR.
 .IP "\fB\-fast\fR" 4
 .IX Item "-fast"
 Non-spec-compliant optimizations.

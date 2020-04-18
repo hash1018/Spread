@@ -10,7 +10,7 @@
 <meta name="description" content="General Documentation: ">
 <meta name="keywords" content="FFmpeg documentation : General ">
 <meta name="Generator" content="texi2html 5.0">
-<!-- Created on April 7, 2020 by texi2html 5.0 -->
+<!-- Created on April 18, 2020 by texi2html 5.0 -->
 <!--
 texi2html was written by: 
             Lionel Cons <Lionel.Cons@cern.ch> (original author)
@@ -131,16 +131,18 @@ package(amdgru-pro contains, but does not install automatically) are required.
 <h2 class="section"><a href="general.html#toc-AviSynth">1.3 AviSynth</a></h2>
 
 <p>FFmpeg can read AviSynth scripts as input. To enable support, pass
-<code>--enable-avisynth</code> to configure.  The correct headers are
-included in compat/avisynth/, which allows the user to enable support
-without needing to search for these headers themselves.
+<code>--enable-avisynth</code> to configure after installing the headers
+provided by <a href="https://github.com/AviSynth/AviSynthPlus">AviSynth+</a>.
+AviSynth+ can be configured to install only the headers by either
+passing <code>-DHEADERS_ONLY:bool=on</code> to the normal CMake-based build
+system, or by using the supplied <code>GNUmakefile</code>.
 </p>
 <p>For Windows, supported AviSynth variants are
 <a href="http://avisynth.nl">AviSynth 2.6 RC1 or higher</a> for 32-bit builds and
 <a href="http://avisynth.nl/index.php/AviSynth+">AviSynth+ r1718 or higher</a> for 32-bit and 64-bit builds.
 </p>
-<p>For Linux and OS X, the supported AviSynth variant is
-<a href="https://github.com/avxsynth/avxsynth">AvxSynth</a>.
+<p>For Linux, macOS, and BSD, the only supported AviSynth variant is
+<a href="https://github.com/AviSynth/AviSynthPlus">AviSynth+</a>, starting with version 3.5.
 </p>
 <div class="float alert alert-info">
 <p>In 2016, AviSynth+ added support for building with GCC. However, due to
@@ -157,10 +159,11 @@ GCC builds of AviSynth+ by passing <code>-DAVSC_WIN32_GCC32</code> to
 GCC builds of AviSynth+ without any special flags.
 </p></div>
 <div class="float alert alert-info">
-<p>AviSynth and AvxSynth are loaded dynamically.  Distributors can build FFmpeg
-with <code>--enable-avisynth</code>, and the binaries will work regardless of the
-end user having AviSynth or AvxSynth installed - they&rsquo;ll only need to be
-installed to use AviSynth scripts (obviously).
+<p>AviSynth(+) is loaded dynamically.  Distributors can build FFmpeg
+with <code>--enable-avisynth</code>, and the binaries will work regardless
+of the end user having AviSynth installed.  If/when an end user
+would like to use AviSynth scripts, then they can install AviSynth(+)
+and FFmpeg will be able to find and use it to open scripts.
 </p></div>
 <a name="Chromaprint"></a>
 <h2 class="section"><a href="general.html#toc-Chromaprint">1.4 Chromaprint</a></h2>
